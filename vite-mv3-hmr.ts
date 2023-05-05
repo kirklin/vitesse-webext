@@ -49,9 +49,9 @@ export const MV3Hmr = (): PluginOption => {
         if (importedModules) {
           for (const mod of importedModules) {
             code = code.replace(mod.url, normalizeViteUrl(isWin
-              ? mod.url.replace(/[A-Z]:\//, '').replace(/:/, '.')
+              ? mod.url
               : mod.url,
-            mod.type)) // fix invalid colon in /@fs/C:, /@id/plugin-vue:export-helper
+            mod.type))
             writeToDisk(mod.url)
           }
         }
@@ -61,7 +61,7 @@ export const MV3Hmr = (): PluginOption => {
             .replace(/\/@vite\/client/g, '/dist/mv3client.mjs')
             .replace(/\/@id\//g, '/')
             .replace(/__uno.css/g, '~~uno.css')
-            .replace(/__x00__plugin-vue:export-helper/g, '~~x00__plugin-vue:export-helper.js')
+            .replace(/__x00__plugin-vue:export-helper/g, '~~x00__plugin-vue.export-helper.js')
             .replace(/(\/\.vite\/deps\/\S+?)\?v=\w+/g, '$1')
           if (isWin) {
             code = code
@@ -69,9 +69,9 @@ export const MV3Hmr = (): PluginOption => {
           }
 
           const targetFile = normalizeFsUrl(isWin
-            ? urlModule.url.replace(/[A-Z]:\//, '').replace(/:/, '.')
+            ? urlModule.url.replace(/[A-Z]:\//, '')
             : urlModule.url,
-          urlModule.type) // fix invalid colon in /@fs/C:, /@id/plugin-vue:export-helper
+          urlModule.type)
           await fs.ensureDir(dirname(targetFile))
           await fs.writeFile(targetFile, code)
         }
@@ -99,6 +99,9 @@ function normalizeFsUrl(url: string, type: string) {
       // `\0plugin-vue:export-helper` EXPORT_HELPER_ID
       // eslint-disable-next-line no-control-regex
       .replace(/\u0000/g, '__x00__')
+      // fix invalid colon in /@fs/C:, /@id/plugin-vue:export-helper
+      .replace(/[A-Z]:\//, '')
+      .replace(/:/g, '.')
       // filenames starting with "_" are reserved for use by the system.
       .replace(/^_+/, match => '~'.repeat(match.length)),
   )
